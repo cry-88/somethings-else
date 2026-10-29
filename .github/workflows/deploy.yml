@@ -1,0 +1,50 @@
+name: Deploy portfolio to GitHub Pages
+
+# 推送到 main 或手动触发：组装静态站点 → 发布 GitHub Pages
+# 站点地址： https://cry-88.github.io/somethings-else/
+# 首次使用需在 Settings → Pages → Source 选择「GitHub Actions」。
+#
+# 约定：作品集里每个项目都是零依赖、零构建的单文件/小目录，
+# 组装步骤只做拷贝，不引入任何构建链。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 组装站点（名片页作为站点入口）
+        run: |
+          mkdir -p _site
+          cp -r "个人名片页" _site/
+          mv "_site/个人名片页/名片页.html" _site/index.html
+          ls -la _site/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
